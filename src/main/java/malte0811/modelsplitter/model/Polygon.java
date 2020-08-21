@@ -96,4 +96,27 @@ public class Polygon
         }
         return new Polygon(translatedVertices);
     }
+
+    public List<Polygon> quadify() {
+        List<Polygon> quads = new ArrayList<>();
+        int secondVertex = 1;
+        while (secondVertex + 2 < points.size()) {
+            quads.add(new Polygon(ImmutableList.of(
+                    points.get(0),
+                    points.get(secondVertex),
+                    points.get(secondVertex + 1),
+                    points.get(secondVertex + 2)
+            )));
+            secondVertex += 3;
+        }
+        if (secondVertex + 1 < points.size()) {
+            quads.add(new Polygon(ImmutableList.of(
+                    points.get(0),
+                    points.get(secondVertex),
+                    points.get(secondVertex + 1),
+                    points.get(secondVertex + 1)
+            )));
+        }
+        return quads;
+    }
 }

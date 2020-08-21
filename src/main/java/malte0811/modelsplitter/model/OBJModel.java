@@ -136,4 +136,12 @@ public class OBJModel {
         }
         return new OBJModel(translatedFaces);
     }
+
+    public OBJModel quadify() {
+        List<Polygon> translatedFaces = new ArrayList<>(faces.size());
+        for (Polygon p : faces) {
+            translatedFaces.addAll(p.quadify());
+        }
+        return new OBJModel(translatedFaces);
+    }
 }

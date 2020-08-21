@@ -66,17 +66,28 @@ public class SplitModel {
                     //TODO sensible treatment of zero
                     splitModel.get(EpsilonMath.Sign.ZERO)
             );
-            if (!sectionModel.isEmpty()) {
-                modelPerSection.put(
-                        borderPos - 1,
-                        sectionModel.translate(axis, -borderPos + 1)
-                );
-            }
+            putModel(modelPerSection, axis, borderPos - 1, sectionModel);
             input = splitModel.get(EpsilonMath.Sign.POSITIVE);
             if (input == null) {
                 input = new OBJModel();
             }
         }
+        putModel(modelPerSection, axis, lastBorder, input);
         return modelPerSection;
+    }
+
+    private static void putModel(
+            Int2ObjectMap<OBJModel> sectionModels,
+            int axis,
+            int section,
+            OBJModel baseSectionModel
+    ) {
+        if (!baseSectionModel.isEmpty()) {
+            sectionModels.put(
+                    section,
+                    baseSectionModel.translate(axis, -section)
+                            .quadify()
+            );
+        }
     }
 }
