@@ -46,4 +46,14 @@ public class Vertex {
     public double[] getUV() {
         return uv;
     }
+
+    public Vertex translate(int axis, double amount) {
+        double[] offsetData = new double[3];
+        offsetData[axis] = amount;
+        return new Vertex(
+                position.add(new Vec3d(offsetData)),
+                normal,
+                uv
+        );
+    }
 }

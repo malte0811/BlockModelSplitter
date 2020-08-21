@@ -22,6 +22,14 @@ public class EpsilonMath {
         return diff.lengthSquared() < epsilon * epsilon;
     }
 
+    public int floor(double in) {
+        return (int) Math.floor(in + epsilon);
+    }
+
+    public int ceil(double in) {
+        return (int) Math.ceil(in - epsilon);
+    }
+
     public enum Sign {
         POSITIVE,
         ZERO,

@@ -83,9 +83,17 @@ public class Polygon
     }
 
     private Vertex intersect(Vertex a, Vertex b, Plane p) {
-	    final double productA = a.getPosition().dotProduct(p.normal);
+        final double productA = a.getPosition().dotProduct(p.normal);
         final double productB = b.getPosition().dotProduct(p.normal);
         double lambda = (p.dotProduct - productB) / (productA - productB);
         return Vertex.interpolate(a, b, lambda);
+    }
+
+    public Polygon translate(int axis, double amount) {
+        List<Vertex> translatedVertices = new ArrayList<>(points.size());
+        for (Vertex v : points) {
+            translatedVertices.add(v.translate(axis, amount));
+        }
+        return new Polygon(translatedVertices);
     }
 }

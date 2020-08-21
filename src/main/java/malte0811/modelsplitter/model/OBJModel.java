@@ -9,6 +9,7 @@ import malte0811.modelsplitter.math.EpsilonMath;
 import malte0811.modelsplitter.math.Plane;
 import malte0811.modelsplitter.math.Vec3d;
 
+import javax.annotation.Nullable;
 import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -55,11 +56,26 @@ public class OBJModel {
                             faces.add(new Polygon(vertices));
                             break;
                         default:
-                            System.out.println("Ignoring line "+line);
+                            System.out.println("Ignoring line " + line);
                             break;
                     }
                 });
         this.faces = ImmutableList.copyOf(faces);
+    }
+
+    public OBJModel() {
+        this(ImmutableList.of());
+    }
+
+    public static OBJModel union(@Nullable OBJModel a, @Nullable OBJModel b) {
+        List<Polygon> result = new ArrayList<>();
+        if (a != null) {
+            result.addAll(a.getFaces());
+        }
+        if (b != null) {
+            result.addAll(b.getFaces());
+        }
+        return new OBJModel(result);
     }
 
     private double[] readTokens(StringTokenizer tokenizer, int tokens) {
@@ -92,16 +108,32 @@ public class OBJModel {
             StringJoiner line = new StringJoiner(" ", "f ", "");
             for (Vertex v : f.getPoints()) {
                 final int vIndex = points.computeIntIfAbsent(v.getPosition(), pos -> {
-                    out.println("v "+pos);
+                    out.printf("v %.4f %.4f %.4f\n", pos.get(0), pos.get(1), pos.get(2));
                     return points.size();
                 }) + 1;
                 final int uvIndex = uvs.computeIntIfAbsent(v.getUV(), uv -> {
-                    out.println("vt "+uv[0]+" "+uv[1]);
+                    out.printf("vt %.6f %.6f\n", uv[0], uv[1]);
                     return uvs.size();
                 }) + 1;
                 line.add(vIndex + "/" + uvIndex);
             }
             out.println(line.toString());
         }
+    }
+
+    public boolean isEmpty() {
+        return faces.isEmpty();
+    }
+
+    public List<Polygon> getFaces() {
+        return faces;
+    }
+
+    public OBJModel translate(int axis, double amount) {
+        List<Polygon> translatedFaces = new ArrayList<>(faces.size());
+        for (Polygon p : faces) {
+            translatedFaces.add(p.translate(axis, amount));
+        }
+        return new OBJModel(translatedFaces);
     }
 }
