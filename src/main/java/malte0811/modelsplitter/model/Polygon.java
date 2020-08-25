@@ -10,34 +10,38 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class Polygon
-{
+public class Polygon<Texture> {
     private static final EpsilonMath EPS_MATH = new EpsilonMath(1e-5);
-	private final List<Vertex> points;
+    private final List<Vertex> points;
+    private final Texture texture;
 
-	public Polygon(List<Vertex> points)
-	{
-		this.points = ImmutableList.copyOf(points);
-	}
-
-    public Polygon(Vertex first, List<Vertex> inner, Vertex last) {
-	    List<Vertex> points = new ArrayList<>();
-	    if (!EPS_MATH.areSame(first.getPosition(), inner.get(0).getPosition())) {
-	        points.add(first);
-        }
-        points.addAll(inner);
-	    if (!EPS_MATH.areSame(inner.get(inner.size() - 1).getPosition(), last.getPosition())) {
-	        points.add(last);
-        }
+    public Polygon(List<Vertex> points, Texture texture) {
         this.points = ImmutableList.copyOf(points);
+        this.texture = texture;
     }
 
-    public List<Vertex> getPoints()
-	{
-		return points;
-	}
+    public Polygon(Vertex first, List<Vertex> inner, Vertex last, Texture texture) {
+        List<Vertex> points = new ArrayList<>();
+        if (!EPS_MATH.areSame(first.getPosition(), inner.get(0).getPosition())) {
+            points.add(first);
+        }
+        points.addAll(inner);
+        if (!EPS_MATH.areSame(inner.get(inner.size() - 1).getPosition(), last.getPosition())) {
+            points.add(last);
+        }
+        this.points = ImmutableList.copyOf(points);
+        this.texture = texture;
+    }
 
-	public Map<EpsilonMath.Sign, Polygon> splitAlong(Plane p) {
+    public List<Vertex> getPoints() {
+        return points;
+    }
+
+    public Texture getTexture() {
+        return texture;
+    }
+
+    public Map<EpsilonMath.Sign, Polygon<Texture>> splitAlong(Plane p) {
         List<EpsilonMath.Sign> signs = new ArrayList<>(points.size());
         for (final Vertex point : points) {
             final double product = p.normal.dotProduct(point.getPosition()) - p.dotProduct;
@@ -77,8 +81,8 @@ public class Polygon
         Vertex firstNewPoint = intersect(cyclicPoints.get(firstSignStart - 1), cyclicPoints.get(firstSignStart), p);
         Vertex otherNewPoint = intersect(cyclicPoints.get(otherSignStart - 1), cyclicPoints.get(otherSignStart), p);
         return ImmutableMap.of(
-                firstSign, new Polygon(firstNewPoint, firstInnerPoints, otherNewPoint),
-                otherSign, new Polygon(otherNewPoint, otherInnerPoints, firstNewPoint)
+                firstSign, new Polygon<>(firstNewPoint, firstInnerPoints, otherNewPoint, getTexture()),
+                otherSign, new Polygon<>(otherNewPoint, otherInnerPoints, firstNewPoint, getTexture())
         );
     }
 
@@ -89,33 +93,33 @@ public class Polygon
         return Vertex.interpolate(a, b, lambda);
     }
 
-    public Polygon translate(int axis, double amount) {
+    public Polygon<Texture> translate(int axis, double amount) {
         List<Vertex> translatedVertices = new ArrayList<>(points.size());
         for (Vertex v : points) {
             translatedVertices.add(v.translate(axis, amount));
         }
-        return new Polygon(translatedVertices);
+        return new Polygon<>(translatedVertices, texture);
     }
 
-    public List<Polygon> quadify() {
-        List<Polygon> quads = new ArrayList<>();
+    public List<Polygon<Texture>> quadify() {
+        List<Polygon<Texture>> quads = new ArrayList<>();
         int secondVertex = 1;
         while (secondVertex + 2 < points.size()) {
-            quads.add(new Polygon(ImmutableList.of(
+            quads.add(new Polygon<>(ImmutableList.of(
                     points.get(0),
                     points.get(secondVertex),
                     points.get(secondVertex + 1),
                     points.get(secondVertex + 2)
-            )));
-            secondVertex += 3;
+            ), getTexture()));
+            secondVertex += 2;
         }
         if (secondVertex + 1 < points.size()) {
-            quads.add(new Polygon(ImmutableList.of(
+            quads.add(new Polygon<>(ImmutableList.of(
                     points.get(0),
                     points.get(secondVertex),
                     points.get(secondVertex + 1),
                     points.get(secondVertex + 1)
-            )));
+            ), getTexture()));
         }
         return quads;
     }

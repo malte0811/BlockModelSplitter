@@ -1,4 +1,4 @@
-package malte0811.modelsplitter.math;
+package net.minecraft.util.math;
 
 import java.util.Objects;
 
@@ -24,10 +24,5 @@ public class Vec3i {
     @Override
     public int hashCode() {
         return Objects.hash(x, y, z);
-    }
-
-    @Override
-    public String toString() {
-        return x + "_" + y + "_" + z;
     }
 }

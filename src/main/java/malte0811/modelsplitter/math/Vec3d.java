@@ -4,9 +4,9 @@ import com.google.common.base.Preconditions;
 
 import java.util.Arrays;
 
-public class Vec3d
-{
-	private final double[] elements;
+public class Vec3d {
+    public static final Vec3d ZERO = new Vec3d(0, 0, 0);
+    private final double[] elements;
 
     public Vec3d(double[] data) {
         Preconditions.checkArgument(data.length == 3);
@@ -16,21 +16,21 @@ public class Vec3d
         elements = Arrays.copyOf(data, 3);
     }
 
-	public Vec3d(double x, double y, double z) {
+    public Vec3d(double x, double y, double z) {
         this(new double[]{x, y, z});
     }
 
-	public double dotProduct(Vec3d other) {
-		double ret = 0;
-		for (int i = 0; i < 3; ++i) {
-			ret += get(i) * other.get(i);
-		}
-		return ret;
-	}
+    public double dotProduct(Vec3d other) {
+        double ret = 0;
+        for (int i = 0; i < 3; ++i) {
+            ret += get(i) * other.get(i);
+        }
+        return ret;
+    }
 
-	public double get(int index) {
+    public double get(int index) {
         return elements[index];
-	}
+    }
 
     public double lengthSquared() {
         double ret = 0;
@@ -40,7 +40,7 @@ public class Vec3d
         return ret;
     }
 
-	public double length() {
+    public double length() {
         return Math.sqrt(lengthSquared());
     }
 
@@ -66,6 +66,14 @@ public class Vec3d
 
     @Override
     public String toString() {
-        return get(0)+" "+get(1)+" "+get(2);
+        return get(0) + " " + get(1) + " " + get(2);
+    }
+
+    public Vec3d normalize() {
+        final double len = length();
+        if (len < 1e-4)
+            return this;
+        else
+            return scale(1 / len);
     }
 }

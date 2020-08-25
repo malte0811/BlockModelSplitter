@@ -34,8 +34,8 @@ public class Vertex {
     // lambda * a + (1 - lambda) * b
     public static Vertex interpolate(Vertex a, Vertex b, double lambda) {
         return new Vertex(
-                a.position.scale(lambda).add(b.position.scale(1-lambda)),
-                a.normal.scale(lambda).add(b.normal.scale(1-lambda)),
+                a.position.scale(lambda).add(b.position.scale(1 - lambda)),
+                a.normal.scale(lambda).add(b.normal.scale(1 - lambda)),
                 new double[]{
                         lambda * a.getU() + (1 - lambda) * b.getU(),
                         lambda * a.getV() + (1 - lambda) * b.getV(),

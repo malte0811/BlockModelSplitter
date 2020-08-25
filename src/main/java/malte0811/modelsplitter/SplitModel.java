@@ -4,27 +4,28 @@ import com.google.common.collect.ImmutableMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import malte0811.modelsplitter.math.EpsilonMath;
+import malte0811.modelsplitter.math.EpsilonMath.Sign;
 import malte0811.modelsplitter.math.Plane;
 import malte0811.modelsplitter.math.Vec3d;
-import malte0811.modelsplitter.math.Vec3i;
 import malte0811.modelsplitter.model.OBJModel;
 import malte0811.modelsplitter.model.Polygon;
 import malte0811.modelsplitter.model.Vertex;
+import net.minecraft.util.math.Vec3i;
 
 import java.util.Map;
 
-public class SplitModel {
+public class SplitModel<Texture> {
     private static final EpsilonMath EPS_MATH = new EpsilonMath(1e-5);
 
-    private final Map<Vec3i, OBJModel> submodels;
+    private final Map<Vec3i, OBJModel<Texture>> submodels;
 
-    public SplitModel(OBJModel input) {
-        ImmutableMap.Builder<Vec3i, OBJModel> submodels = ImmutableMap.builder();
-        for (Int2ObjectMap.Entry<OBJModel> xSlice : splitInPlanes(input, 0).int2ObjectEntrySet()) {
-            Int2ObjectMap<OBJModel> columns = splitInPlanes(xSlice.getValue(), 2);
-            for (Int2ObjectMap.Entry<OBJModel> zColumn : columns.int2ObjectEntrySet()) {
-                Int2ObjectMap<OBJModel> dices = splitInPlanes(zColumn.getValue(), 1);
-                for (Int2ObjectMap.Entry<OBJModel> yDice : dices.int2ObjectEntrySet()) {
+    public SplitModel(OBJModel<Texture> input) {
+        ImmutableMap.Builder<Vec3i, OBJModel<Texture>> submodels = ImmutableMap.builder();
+        for (Int2ObjectMap.Entry<OBJModel<Texture>> xSlice : splitInPlanes(input, 0).int2ObjectEntrySet()) {
+            Int2ObjectMap<OBJModel<Texture>> columns = splitInPlanes(xSlice.getValue(), 2);
+            for (Int2ObjectMap.Entry<OBJModel<Texture>> zColumn : columns.int2ObjectEntrySet()) {
+                Int2ObjectMap<OBJModel<Texture>> dices = splitInPlanes(zColumn.getValue(), 1);
+                for (Int2ObjectMap.Entry<OBJModel<Texture>> yDice : dices.int2ObjectEntrySet()) {
                     submodels.put(
                             new Vec3i(xSlice.getIntKey(), yDice.getIntKey(), zColumn.getIntKey()),
                             yDice.getValue()
@@ -35,54 +36,50 @@ public class SplitModel {
         this.submodels = submodels.build();
     }
 
-    public Map<Vec3i, OBJModel> getParts() {
+    public Map<Vec3i, OBJModel<Texture>> getParts() {
         return submodels;
     }
 
-    private static Int2ObjectMap<OBJModel> splitInPlanes(OBJModel input, int axis) {
+    private static <Texture> Int2ObjectMap<OBJModel<Texture>> splitInPlanes(OBJModel<Texture> input, int axis) {
         if (input.isEmpty()) {
             return new Int2ObjectOpenHashMap<>();
         }
         double min = Double.POSITIVE_INFINITY;
         double max = Double.NEGATIVE_INFINITY;
-        for (Polygon f : input.getFaces()) {
+        for (Polygon<Texture> f : input.getFaces()) {
             for (Vertex v : f.getPoints()) {
                 double pos = v.getPosition().get(axis);
                 min = Math.min(min, pos);
                 max = Math.max(max, pos);
             }
         }
-        int firstBorder = EPS_MATH.ceil(min);
-        int lastBorder = EPS_MATH.floor(max);
-        Int2ObjectMap<OBJModel> modelPerSection = new Int2ObjectOpenHashMap<>();
+        final int firstBorder = EPS_MATH.ceil(min);
+        final int lastBorder = EPS_MATH.floor(max);
+        Int2ObjectMap<OBJModel<Texture>> modelPerSection = new Int2ObjectOpenHashMap<>();
+        double[] vecData = new double[3];
+        vecData[axis] = 1;
+        final Vec3d normal = new Vec3d(vecData);
         for (int borderPos = firstBorder; borderPos <= lastBorder; ++borderPos) {
-            double[] vecData = new double[3];
-            vecData[axis] = 1;
-            Vec3d normal = new Vec3d(vecData);
             Plane cut = new Plane(normal, borderPos);
-            Map<EpsilonMath.Sign, OBJModel> splitModel = input.split(cut);
-            OBJModel sectionModel = OBJModel.union(
-                    splitModel.get(EpsilonMath.Sign.NEGATIVE),
-                    //TODO sensible treatment of zero
-                    splitModel.get(EpsilonMath.Sign.ZERO)
-            );
+            Map<EpsilonMath.Sign, OBJModel<Texture>> splitModel = input.split(cut);
+            OBJModel<Texture> sectionModel = splitModel.get(EpsilonMath.Sign.NEGATIVE);
             putModel(modelPerSection, axis, borderPos - 1, sectionModel);
-            input = splitModel.get(EpsilonMath.Sign.POSITIVE);
-            if (input == null) {
-                input = new OBJModel();
-            }
+            input = OBJModel.union(
+                    splitModel.get(EpsilonMath.Sign.POSITIVE),
+                    splitModel.get(Sign.ZERO)
+            );
         }
         putModel(modelPerSection, axis, lastBorder, input);
         return modelPerSection;
     }
 
-    private static void putModel(
-            Int2ObjectMap<OBJModel> sectionModels,
+    private static <Texture> void putModel(
+            Int2ObjectMap<OBJModel<Texture>> sectionModels,
             int axis,
             int section,
-            OBJModel baseSectionModel
+            OBJModel<Texture> baseSectionModel
     ) {
-        if (!baseSectionModel.isEmpty()) {
+        if (baseSectionModel != null && !baseSectionModel.isEmpty()) {
             sectionModels.put(
                     section,
                     baseSectionModel.translate(axis, -section)

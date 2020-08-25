@@ -14,17 +14,17 @@ import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class OBJModel {
-    private final List<Polygon> faces;
+public class OBJModel<Texture> {
+    private final List<Polygon<Texture>> faces;
 
-    public OBJModel(List<Polygon> faces) {
+    public OBJModel(List<Polygon<Texture>> faces) {
         this.faces = ImmutableList.copyOf(faces);
     }
 
-    public OBJModel(InputStream source) {
+    public static OBJModel<Void> readFromStream(InputStream source) {
         List<Vec3d> points = new ArrayList<>();
         List<double[]> uvs = new ArrayList<>();
-        List<Polygon> faces = new ArrayList<>();
+        List<Polygon<Void>> faces = new ArrayList<>();
         new BufferedReader(new InputStreamReader(source))
                 .lines()
                 .forEach(line -> {
@@ -53,32 +53,32 @@ public class OBJModel {
                                         uvs.get(vt)
                                 ));
                             }
-                            faces.add(new Polygon(vertices));
+                            faces.add(new Polygon<>(vertices, null));
                             break;
                         default:
                             System.out.println("Ignoring line " + line);
                             break;
                     }
                 });
-        this.faces = ImmutableList.copyOf(faces);
+        return new OBJModel<>(faces);
     }
 
     public OBJModel() {
         this(ImmutableList.of());
     }
 
-    public static OBJModel union(@Nullable OBJModel a, @Nullable OBJModel b) {
-        List<Polygon> result = new ArrayList<>();
+    public static <Texture> OBJModel<Texture> union(@Nullable OBJModel<Texture> a, @Nullable OBJModel<Texture> b) {
+        List<Polygon<Texture>> result = new ArrayList<>();
         if (a != null) {
             result.addAll(a.getFaces());
         }
         if (b != null) {
             result.addAll(b.getFaces());
         }
-        return new OBJModel(result);
+        return new OBJModel<>(result);
     }
 
-    private double[] readTokens(StringTokenizer tokenizer, int tokens) {
+    private static double[] readTokens(StringTokenizer tokenizer, int tokens) {
         double[] data = new double[tokens];
         for (int i = 0; i < tokens; ++i) {
             data[i] = Double.parseDouble(tokenizer.nextToken());
@@ -86,25 +86,25 @@ public class OBJModel {
         return data;
     }
 
-    public Map<EpsilonMath.Sign, OBJModel> split(Plane p) {
-        Map<EpsilonMath.Sign, List<Polygon>> resultFaces = new EnumMap<>(EpsilonMath.Sign.class);
-        for (Polygon f : this.faces) {
-            Map<EpsilonMath.Sign, Polygon> splitResult = f.splitAlong(p);
-            for (Map.Entry<EpsilonMath.Sign, Polygon> e : splitResult.entrySet()) {
+    public Map<EpsilonMath.Sign, OBJModel<Texture>> split(Plane p) {
+        Map<EpsilonMath.Sign, List<Polygon<Texture>>> resultFaces = new EnumMap<>(EpsilonMath.Sign.class);
+        for (Polygon<Texture> f : this.faces) {
+            Map<EpsilonMath.Sign, Polygon<Texture>> splitResult = f.splitAlong(p);
+            for (Map.Entry<EpsilonMath.Sign, Polygon<Texture>> e : splitResult.entrySet()) {
                 resultFaces.computeIfAbsent(e.getKey(), s -> new ArrayList<>())
                         .add(e.getValue());
             }
         }
         return resultFaces.entrySet()
                 .stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, e -> new OBJModel(e.getValue())));
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> new OBJModel<>(e.getValue())));
     }
 
     public void write(OutputStream outRaw) {
         PrintStream out = new PrintStream(outRaw);
         Object2IntMap<Vec3d> points = new Object2IntOpenHashMap<>();
         Object2IntMap<double[]> uvs = new Object2IntOpenCustomHashMap<>(DoubleArrays.HASH_STRATEGY);
-        for (Polygon f : faces) {
+        for (Polygon<Texture> f : faces) {
             StringJoiner line = new StringJoiner(" ", "f ", "");
             for (Vertex v : f.getPoints()) {
                 final int vIndex = points.computeIntIfAbsent(v.getPosition(), pos -> {
@@ -125,23 +125,23 @@ public class OBJModel {
         return faces.isEmpty();
     }
 
-    public List<Polygon> getFaces() {
+    public List<Polygon<Texture>> getFaces() {
         return faces;
     }
 
-    public OBJModel translate(int axis, double amount) {
-        List<Polygon> translatedFaces = new ArrayList<>(faces.size());
-        for (Polygon p : faces) {
+    public OBJModel<Texture> translate(int axis, double amount) {
+        List<Polygon<Texture>> translatedFaces = new ArrayList<>(faces.size());
+        for (Polygon<Texture> p : faces) {
             translatedFaces.add(p.translate(axis, amount));
         }
-        return new OBJModel(translatedFaces);
+        return new OBJModel<>(translatedFaces);
     }
 
-    public OBJModel quadify() {
-        List<Polygon> translatedFaces = new ArrayList<>(faces.size());
-        for (Polygon p : faces) {
+    public OBJModel<Texture> quadify() {
+        List<Polygon<Texture>> translatedFaces = new ArrayList<>(faces.size());
+        for (Polygon<Texture> p : faces) {
             translatedFaces.addAll(p.quadify());
         }
-        return new OBJModel(translatedFaces);
+        return new OBJModel<>(translatedFaces);
     }
 }

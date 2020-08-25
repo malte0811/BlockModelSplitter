@@ -44,7 +44,7 @@ public class EpsilonMath {
                 case NEGATIVE:
                     return POSITIVE;
                 default:
-                    throw new IllegalArgumentException("Unknown sign "+this);
+                    throw new IllegalArgumentException("Unknown sign " + this);
             }
         }
     }
