@@ -25,4 +25,9 @@ public class Vec3i {
     public int hashCode() {
         return Objects.hash(x, y, z);
     }
+
+    @Override
+    public String toString() {
+        return x + "_" + y + "_" + z;
+    }
 }

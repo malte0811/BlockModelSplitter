@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'maven'
 }
 
 group 'malte0811'
@@ -25,3 +26,53 @@ sourceSets {
         }
     }
 }
+
+jar {
+
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives sourcesJar
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: "file://" + (System.getenv("local_maven") != null ? System.getenv("local_maven") : System.getenv("bamboo_local_maven")))
+            pom {
+                groupId = project.group
+                version = project.version
+                artifactId = project.archivesBaseName
+                project {
+                    name project.archivesBaseName
+                    packaging 'jar'
+                    description project.archivesBaseName
+                    url ''
+                    scm {
+                        url 'https://github.com/malte0811/BlockModelSplitter'
+                        connection 'scm:git:git@github.com/malte0811/BlockModelSplitter.git'
+                        developerConnection 'scm:git:git@github.com/malte0811/BlockModelSplitter.git'
+                    }
+                    issueManagement {
+                        system 'github'
+                        url 'https://github.com/malte0811/BlockModelSplitter/issues'
+                    }
+
+                    developers {
+                        developer {
+                            id 'malte0811'
+                            name 'malte0811'
+                            roles { role 'developer' }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+uploadArchives.dependsOn build
