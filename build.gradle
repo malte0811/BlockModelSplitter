@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'maven'
 }
 
 group 'malte0811'
@@ -25,3 +26,18 @@ sourceSets {
         }
     }
 }
+
+artifacts {
+    archives jar
+}
+
+//TODO source jar
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            //repository(url: "file://" + (System.getenv("local_maven") != null ? System.getenv("local_maven") : System.getenv("bamboo_local_maven")))
+            repository(url: "file:///home/malte/.m2")
+        }
+    }
+}
+uploadArchives.dependsOn build
