@@ -10,11 +10,12 @@ import java.util.Map;
 public class Main
 {
     public static void main(String[] args) throws Exception {
-        FileInputStream fis = new FileInputStream("arc_furnace.obj");
+        final String name = "teslacoil";
+        FileInputStream fis = new FileInputStream(name+".obj");
         OBJModel<Void> model = OBJModel.readFromStream(fis);
         SplitModel<Void> split = new SplitModel<>(model);
         for (Map.Entry<Vec3i, OBJModel<Void>> e : split.getParts().entrySet()) {
-            e.getValue().write(new FileOutputStream("arc_furnace_" + e.getKey() + ".obj"));
+            e.getValue().write(new FileOutputStream(name+"_" + e.getKey() + ".obj"));
         }
     }
 }

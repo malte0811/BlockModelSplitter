@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'malte0811'
-version '1.0'
+version '1.0.1'
 
 repositories {
     mavenCentral()
@@ -28,7 +28,9 @@ sourceSets {
 }
 
 jar {
-
+    manifest {
+        attributes "FMLModType": "LIBRARY"
+    }
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
@@ -72,7 +74,11 @@ uploadArchives {
                     }
                 }
             }
+            pom.whenConfigured {
+                p -> p.dependencies = []
+            }
         }
     }
 }
+
 uploadArchives.dependsOn build
