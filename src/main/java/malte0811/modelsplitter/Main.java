@@ -1,6 +1,6 @@
 package malte0811.modelsplitter;
 
-import malte0811.modelsplitter.math.Vec3i;
+import malte0811.modelsplitter.math.ModelSplitterVec3i;
 import malte0811.modelsplitter.model.OBJModel;
 
 import java.io.FileInputStream;
@@ -14,8 +14,8 @@ public class Main
         FileInputStream fis = new FileInputStream(name+".obj");
         OBJModel<Void> model = OBJModel.readFromStream(fis);
         SplitModel<Void> split = new SplitModel<>(model);
-        for (Map.Entry<Vec3i, OBJModel<Void>> e : split.getParts().entrySet()) {
-            e.getValue().write(new FileOutputStream(name+"_" + e.getKey() + ".obj"));
+        for (Map.Entry<ModelSplitterVec3i, OBJModel<Void>> e : split.getParts().entrySet()) {
+            e.getValue().write(new FileOutputStream(name + "_" + e.getKey() + ".obj"));
         }
     }
 }

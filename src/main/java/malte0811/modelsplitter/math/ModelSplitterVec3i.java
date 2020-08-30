@@ -2,23 +2,35 @@ package malte0811.modelsplitter.math;
 
 import java.util.Objects;
 
-public class Vec3i {
+public class ModelSplitterVec3i {
     private final int x, y, z;
 
-    public Vec3i(int x, int y, int z) {
+    public ModelSplitterVec3i(int x, int y, int z) {
         this.x = x;
         this.y = y;
         this.z = z;
+    }
+
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
+    }
+
+    public int getZ() {
+        return z;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Vec3i vec3i = (Vec3i) o;
-        return x == vec3i.x &&
-                y == vec3i.y &&
-                z == vec3i.z;
+        ModelSplitterVec3i modelSplitterVec3I = (ModelSplitterVec3i) o;
+        return x == modelSplitterVec3I.x &&
+                y == modelSplitterVec3I.y &&
+                z == modelSplitterVec3I.z;
     }
 
     @Override

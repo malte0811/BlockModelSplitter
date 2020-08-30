@@ -5,9 +5,9 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import malte0811.modelsplitter.math.EpsilonMath;
 import malte0811.modelsplitter.math.EpsilonMath.Sign;
+import malte0811.modelsplitter.math.ModelSplitterVec3i;
 import malte0811.modelsplitter.math.Plane;
 import malte0811.modelsplitter.math.Vec3d;
-import malte0811.modelsplitter.math.Vec3i;
 import malte0811.modelsplitter.model.OBJModel;
 import malte0811.modelsplitter.model.Polygon;
 import malte0811.modelsplitter.model.Vertex;
@@ -17,17 +17,17 @@ import java.util.Map;
 public class SplitModel<Texture> {
     private static final EpsilonMath EPS_MATH = new EpsilonMath(1e-5);
 
-    private final Map<Vec3i, OBJModel<Texture>> submodels;
+    private final Map<ModelSplitterVec3i, OBJModel<Texture>> submodels;
 
     public SplitModel(OBJModel<Texture> input) {
-        ImmutableMap.Builder<Vec3i, OBJModel<Texture>> submodels = ImmutableMap.builder();
+        ImmutableMap.Builder<ModelSplitterVec3i, OBJModel<Texture>> submodels = ImmutableMap.builder();
         for (Int2ObjectMap.Entry<OBJModel<Texture>> xSlice : splitInPlanes(input, 0).int2ObjectEntrySet()) {
             Int2ObjectMap<OBJModel<Texture>> columns = splitInPlanes(xSlice.getValue(), 2);
             for (Int2ObjectMap.Entry<OBJModel<Texture>> zColumn : columns.int2ObjectEntrySet()) {
                 Int2ObjectMap<OBJModel<Texture>> dices = splitInPlanes(zColumn.getValue(), 1);
                 for (Int2ObjectMap.Entry<OBJModel<Texture>> yDice : dices.int2ObjectEntrySet()) {
                     submodels.put(
-                            new Vec3i(xSlice.getIntKey(), yDice.getIntKey(), zColumn.getIntKey()),
+                            new ModelSplitterVec3i(xSlice.getIntKey(), yDice.getIntKey(), zColumn.getIntKey()),
                             yDice.getValue()
                     );
                 }
@@ -36,7 +36,7 @@ public class SplitModel<Texture> {
         this.submodels = submodels.build();
     }
 
-    public Map<Vec3i, OBJModel<Texture>> getParts() {
+    public Map<ModelSplitterVec3i, OBJModel<Texture>> getParts() {
         return submodels;
     }
 
