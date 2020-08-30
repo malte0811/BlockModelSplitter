@@ -1,7 +1,7 @@
 package malte0811.modelsplitter;
 
+import malte0811.modelsplitter.math.Vec3i;
 import malte0811.modelsplitter.model.OBJModel;
-import net.minecraft.util.math.Vec3i;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;

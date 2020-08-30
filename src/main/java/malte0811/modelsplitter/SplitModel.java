@@ -7,10 +7,10 @@ import malte0811.modelsplitter.math.EpsilonMath;
 import malte0811.modelsplitter.math.EpsilonMath.Sign;
 import malte0811.modelsplitter.math.Plane;
 import malte0811.modelsplitter.math.Vec3d;
+import malte0811.modelsplitter.math.Vec3i;
 import malte0811.modelsplitter.model.OBJModel;
 import malte0811.modelsplitter.model.Polygon;
 import malte0811.modelsplitter.model.Vertex;
-import net.minecraft.util.math.Vec3i;
 
 import java.util.Map;
 

@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'malte0811'
-version '1.0.1'
+version '1.1.0'
 
 repositories {
     mavenCentral()
@@ -14,17 +14,6 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
     implementation("com.google.guava:guava:29.0-jre")
     compile group: 'it.unimi.dsi', name: 'fastutil', version: '8.1.0'
-}
-
-sourceSets {
-    mockmc {
-    }
-    main {
-        java {
-            compileClasspath += mockmc.output
-            runtimeClasspath += mockmc.output
-        }
-    }
 }
 
 jar {

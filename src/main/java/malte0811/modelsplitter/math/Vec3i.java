@@ -1,4 +1,4 @@
-package net.minecraft.util.math;
+package malte0811.modelsplitter.math;
 
 import java.util.Objects;
 
