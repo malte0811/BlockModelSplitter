@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import malte0811.modelsplitter.math.EpsilonMath;
 import malte0811.modelsplitter.math.Plane;
+import malte0811.modelsplitter.math.Vec3d;
 import malte0811.modelsplitter.util.CyclicListWrapper;
 
 import java.util.ArrayList;
@@ -97,6 +98,14 @@ public class Polygon<Texture> {
         List<Vertex> translatedVertices = new ArrayList<>(points.size());
         for (Vertex v : points) {
             translatedVertices.add(v.translate(axis, amount));
+        }
+        return new Polygon<>(translatedVertices, texture);
+    }
+
+    public Polygon<Texture> translate(Vec3d offset) {
+        List<Vertex> translatedVertices = new ArrayList<>(points.size());
+        for (Vertex v : points) {
+            translatedVertices.add(v.translate(offset));
         }
         return new Polygon<>(translatedVertices, texture);
     }

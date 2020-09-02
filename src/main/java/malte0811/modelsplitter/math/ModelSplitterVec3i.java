@@ -42,4 +42,20 @@ public class ModelSplitterVec3i {
     public String toString() {
         return x + "_" + y + "_" + z;
     }
+
+    public int distanceSq(ModelSplitterVec3i other) {
+        return this.subtract(other).lengthSq();
+    }
+
+    public ModelSplitterVec3i subtract(ModelSplitterVec3i other) {
+        return new ModelSplitterVec3i(
+                this.x - other.x,
+                this.y - other.y,
+                this.z - other.z
+        );
+    }
+
+    public int lengthSq() {
+        return x * x + y * y + z * z;
+    }
 }

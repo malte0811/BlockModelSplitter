@@ -20,6 +20,10 @@ public class Vec3d {
         this(new double[]{x, y, z});
     }
 
+    public Vec3d(ModelSplitterVec3i vec) {
+        this(vec.getX(), vec.getY(), vec.getZ());
+    }
+
     public double dotProduct(Vec3d other) {
         double ret = 0;
         for (int i = 0; i < 3; ++i) {
@@ -75,5 +79,18 @@ public class Vec3d {
             return this;
         else
             return scale(1 / len);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Vec3d vec3d = (Vec3d) o;
+        return Arrays.equals(elements, vec3d.elements);
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(elements);
     }
 }

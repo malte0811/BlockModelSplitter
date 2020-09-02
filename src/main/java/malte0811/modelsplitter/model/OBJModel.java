@@ -137,6 +137,14 @@ public class OBJModel<Texture> {
         return new OBJModel<>(translatedFaces);
     }
 
+    public OBJModel<Texture> translate(Vec3d offset) {
+        List<Polygon<Texture>> translatedFaces = new ArrayList<>(faces.size());
+        for (Polygon<Texture> p : faces) {
+            translatedFaces.add(p.translate(offset));
+        }
+        return new OBJModel<>(translatedFaces);
+    }
+
     public OBJModel<Texture> quadify() {
         List<Polygon<Texture>> translatedFaces = new ArrayList<>(faces.size());
         for (Polygon<Texture> p : faces) {

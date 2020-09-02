@@ -50,10 +50,10 @@ public class Vertex {
     public Vertex translate(int axis, double amount) {
         double[] offsetData = new double[3];
         offsetData[axis] = amount;
-        return new Vertex(
-                position.add(new Vec3d(offsetData)),
-                normal,
-                uv
-        );
+        return translate(new Vec3d(offsetData));
+    }
+
+    public Vertex translate(Vec3d offset) {
+        return new Vertex(position.add(offset), normal, uv);
     }
 }
