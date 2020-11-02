@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'maven'
+    id 'application'
 }
 
 group 'malte0811'
@@ -14,6 +15,7 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
     implementation("com.google.guava:guava:29.0-jre")
     compile group: 'it.unimi.dsi', name: 'fastutil', version: '8.1.0'
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
 }
 
 jar {
@@ -21,6 +23,8 @@ jar {
         attributes "FMLModType": "LIBRARY"
     }
 }
+
+mainClassName = 'malte0811.modelsplitter.Main' 
 
 task sourcesJar(type: Jar, dependsOn: classes) {
     classifier = 'sources'
