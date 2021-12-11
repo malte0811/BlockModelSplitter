@@ -47,10 +47,12 @@ public class OBJModel<Texture> {
     }
 
     public static OBJModel<OBJMaterial> readFromStream(InputStream source, Function<String, InputStream> getMTLInput) {
+        record ParserVertex(int pos, int normal, int uv) {}
+        record ParserFace(List<ParserVertex> vertices, OBJMaterial material) {}
         List<Vec3d> points = new ArrayList<>();
         List<Vec3d> normals = new ArrayList<>();
         List<UVCoords> uvs = new ArrayList<>();
-        Map<String, List<Polygon<OBJMaterial>>> groups = new HashMap<>();
+        Map<String, List<ParserFace>> parserGroups = new HashMap<>();
         MutableObject<String> currentGroup = new MutableObject<>(DEFAULT_GROUP);
         MutableObject<MaterialLibrary> currentMTL = new MutableObject<>(null);
         MutableObject<OBJMaterial> currentMat = new MutableObject<>(null);
@@ -66,29 +68,17 @@ public class OBJModel<Texture> {
                 case "vn" -> normals.add(new Vec3d(readTokens(tokenizer, 3)));
                 case "vt" -> uvs.add(new UVCoords(readTokens(tokenizer, 2)));
                 case "f" -> {
-                    List<Vertex> vertices = new ArrayList<>();
+                    List<ParserVertex> vertices = new ArrayList<>();
                     while (tokenizer.hasMoreTokens()) {
                         final String vertex = tokenizer.nextToken();
                         String[] parts = vertex.split("/");
                         int posId = Integer.parseInt(parts[0]) - 1;
-                        final UVCoords uv;
-                        if (!parts[1].isEmpty()) {
-                            int vt = Integer.parseInt(parts[1]) - 1;
-                            uv = uvs.get(vt);
-                        } else {
-                            uv = UVCoords.ZERO;
-                        }
-                        Vec3d normal;
-                        if (parts.length > 2) {
-                            int vn = Integer.parseInt(parts[2]) - 1;
-                            normal = normals.get(vn);
-                        } else {
-                            normal = new Vec3d(0, 1, 0);
-                        }
-                        vertices.add(new Vertex(points.get(posId), normal, uv));
+                        int vt = !parts[1].isEmpty() ? Integer.parseInt(parts[1]) - 1 : -1;
+                        int vn = parts.length > 2 ? Integer.parseInt(parts[2]) - 1 : -1;
+                        vertices.add(new ParserVertex(posId, vn, vt));
                     }
-                    groups.computeIfAbsent(currentGroup.getValue(), s -> new ArrayList<>())
-                            .add(new Polygon<>(vertices, currentMat.getValue()));
+                    parserGroups.computeIfAbsent(currentGroup.getValue(), s -> new ArrayList<>())
+                            .add(new ParserFace(vertices, currentMat.getValue()));
                 }
                 case "o" -> currentGroup.setValue(tokenizer.nextToken());
                 case "s" -> {
@@ -102,7 +92,25 @@ public class OBJModel<Texture> {
                 default -> System.out.println("Ignoring line with token " + p.getKey());
             }
         });
-        return new OBJModel<>(groups.entrySet().stream());
+        Map<String, List<Polygon<OBJMaterial>>> groups = new HashMap<>();
+        for (var parserEntry : parserGroups.entrySet()) {
+            List<Polygon<OBJMaterial>> group = new ArrayList<>(parserEntry.getValue().size());
+            for (var parserPoly : parserEntry.getValue()) {
+                List<Vertex> vertices = new ArrayList<>(parserPoly.vertices().size());
+                for (var point : parserPoly.vertices()) {
+                    vertices.add(new Vertex(
+                            points.get(point.pos),
+                            point.normal >= 0 ? normals.get(point.normal) : Vec3d.ZERO,
+                            point.uv >= 0 ? uvs.get(point.uv) : UVCoords.ZERO
+                    ));
+                }
+                group.add(new Polygon<>(vertices, parserPoly.material()));
+            }
+            groups.put(parserEntry.getKey(), group);
+        }
+        return new OBJModel<>(
+                groups.entrySet().stream()
+        );
     }
 
     private static Stream<Pair<String, StringTokenizer>> getRelevantLines(InputStream in) {

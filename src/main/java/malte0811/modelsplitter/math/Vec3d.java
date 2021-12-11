@@ -3,6 +3,8 @@ package malte0811.modelsplitter.math;
 import com.google.common.base.Preconditions;
 
 public record Vec3d(double x, double y, double z) {
+    public static final Vec3d ZERO = new Vec3d(0, 0, 0);
+
     public Vec3d {
         Preconditions.checkArgument(Double.isFinite(x));
         Preconditions.checkArgument(Double.isFinite(y));

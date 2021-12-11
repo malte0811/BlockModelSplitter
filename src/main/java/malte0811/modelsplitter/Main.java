@@ -8,7 +8,7 @@ import java.io.FileOutputStream;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        final String name = "buzzsaw_diesel";
+        final String name = "bucket_wheel";
         FileInputStream fis = new FileInputStream(name + ".obj.ie");
         var model = OBJModel.readFromStream(fis, f -> {
             try {
