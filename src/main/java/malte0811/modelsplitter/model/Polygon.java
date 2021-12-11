@@ -23,11 +23,11 @@ public class Polygon<Texture> {
 
     public Polygon(Vertex first, List<Vertex> inner, Vertex last, Texture texture) {
         List<Vertex> points = new ArrayList<>();
-        if (!EPS_MATH.areSame(first.getPosition(), inner.get(0).getPosition())) {
+        if (!EPS_MATH.areSame(first.position(), inner.get(0).position())) {
             points.add(first);
         }
         points.addAll(inner);
-        if (!EPS_MATH.areSame(inner.get(inner.size() - 1).getPosition(), last.getPosition())) {
+        if (!EPS_MATH.areSame(inner.get(inner.size() - 1).position(), last.position())) {
             points.add(last);
         }
         this.points = ImmutableList.copyOf(points);
@@ -45,7 +45,7 @@ public class Polygon<Texture> {
     public Map<EpsilonMath.Sign, Polygon<Texture>> splitAlong(Plane p) {
         List<EpsilonMath.Sign> signs = new ArrayList<>(points.size());
         for (final Vertex point : points) {
-            final double product = p.normal.dotProduct(point.getPosition()) - p.dotProduct;
+            final double product = p.normal().dotProduct(point.position()) - p.dotProduct();
             signs.add(EPS_MATH.sign(product));
         }
         int firstSignStart = 0;
@@ -88,9 +88,9 @@ public class Polygon<Texture> {
     }
 
     private Vertex intersect(Vertex a, Vertex b, Plane p) {
-        final double productA = a.getPosition().dotProduct(p.normal);
-        final double productB = b.getPosition().dotProduct(p.normal);
-        double lambda = (p.dotProduct - productB) / (productA - productB);
+        final double productA = a.position().dotProduct(p.normal());
+        final double productB = b.position().dotProduct(p.normal());
+        double lambda = (p.dotProduct() - productB) / (productA - productB);
         return Vertex.interpolate(a, b, lambda);
     }
 

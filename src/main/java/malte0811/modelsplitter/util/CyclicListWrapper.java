@@ -4,19 +4,10 @@ import com.google.common.collect.ImmutableList;
 
 import java.util.List;
 
-public class CyclicListWrapper<T> {
-    private final List<T> wrapped;
-
-    public CyclicListWrapper(List<T> wrapped) {
-        this.wrapped = wrapped;
-    }
+public record CyclicListWrapper<T>(List<T> wrapped) {
 
     public T get(int i) {
         return wrapped.get(toIndex(i));
-    }
-
-    public void set(int i, T value) {
-        wrapped.set(toIndex(i), value);
     }
 
     public List<T> sublist(int begin, int end) {

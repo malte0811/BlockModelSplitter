@@ -1,11 +1,6 @@
 package malte0811.modelsplitter.math;
 
-public class EpsilonMath {
-    private final double epsilon;
-
-    public EpsilonMath(double epsilon) {
-        this.epsilon = epsilon;
-    }
+public record EpsilonMath(double epsilon) {
 
     public Sign sign(double firstProduct) {
         if (firstProduct < -epsilon) {
@@ -36,16 +31,11 @@ public class EpsilonMath {
         NEGATIVE;
 
         public Sign invert() {
-            switch (this) {
-                case POSITIVE:
-                    return NEGATIVE;
-                case ZERO:
-                    return ZERO;
-                case NEGATIVE:
-                    return POSITIVE;
-                default:
-                    throw new IllegalArgumentException("Unknown sign " + this);
-            }
+            return switch (this) {
+                case POSITIVE -> NEGATIVE;
+                case ZERO -> ZERO;
+                case NEGATIVE -> POSITIVE;
+            };
         }
     }
 }

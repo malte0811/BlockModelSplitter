@@ -48,7 +48,7 @@ public class SplitModel<Texture> {
         double max = Double.NEGATIVE_INFINITY;
         for (Polygon<Texture> f : input.getFaces()) {
             for (Vertex v : f.getPoints()) {
-                double pos = v.getPosition().get(axis);
+                double pos = v.position().get(axis);
                 min = Math.min(min, pos);
                 max = Math.max(max, pos);
             }

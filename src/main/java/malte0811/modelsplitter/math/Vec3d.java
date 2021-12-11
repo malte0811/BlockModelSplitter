@@ -2,26 +2,19 @@ package malte0811.modelsplitter.math;
 
 import com.google.common.base.Preconditions;
 
-import java.util.Arrays;
-
-public class Vec3d {
-    public static final Vec3d ZERO = new Vec3d(0, 0, 0);
-    private final double[] elements;
-
-    public Vec3d(double[] data) {
-        Preconditions.checkArgument(data.length == 3);
-        for (int i = 0; i < 3; ++i) {
-            Preconditions.checkArgument(Double.isFinite(data[i]));
-        }
-        elements = Arrays.copyOf(data, 3);
+public record Vec3d(double x, double y, double z) {
+    public Vec3d {
+        Preconditions.checkArgument(Double.isFinite(x));
+        Preconditions.checkArgument(Double.isFinite(y));
+        Preconditions.checkArgument(Double.isFinite(z));
     }
 
-    public Vec3d(double x, double y, double z) {
-        this(new double[]{x, y, z});
+    public Vec3d(double[] coords) {
+        this(coords[0], coords[1], coords[2]);
     }
 
     public Vec3d(ModelSplitterVec3i vec) {
-        this(vec.getX(), vec.getY(), vec.getZ());
+        this(vec.x(), vec.y(), vec.z());
     }
 
     public double dotProduct(Vec3d other) {
@@ -33,7 +26,12 @@ public class Vec3d {
     }
 
     public double get(int index) {
-        return elements[index];
+        return switch (index) {
+            case 0 -> x;
+            case 1 -> y;
+            case 2 -> z;
+            default -> throw new IllegalStateException("Unexpected index in Vec3d: " + index);
+        };
     }
 
     public double lengthSquared() {
@@ -42,10 +40,6 @@ public class Vec3d {
             ret += get(i) * get(i);
         }
         return ret;
-    }
-
-    public double length() {
-        return Math.sqrt(lengthSquared());
     }
 
     public Vec3d scale(double lambda) {
@@ -66,31 +60,5 @@ public class Vec3d {
                 get(1) - other.get(1),
                 get(2) - other.get(2)
         );
-    }
-
-    @Override
-    public String toString() {
-        return get(0) + " " + get(1) + " " + get(2);
-    }
-
-    public Vec3d normalize() {
-        final double len = length();
-        if (len < 1e-4)
-            return this;
-        else
-            return scale(1 / len);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Vec3d vec3d = (Vec3d) o;
-        return Arrays.equals(elements, vec3d.elements);
-    }
-
-    @Override
-    public int hashCode() {
-        return Arrays.hashCode(elements);
     }
 }

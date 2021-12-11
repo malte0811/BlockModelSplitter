@@ -15,9 +15,7 @@ import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
-public class Group<Texture> {
-    private final List<Polygon<Texture>> faces;
-
+public record Group<Texture>(List<Polygon<Texture>> faces) {
     public Group(List<Polygon<Texture>> faces) {
         this.faces = ImmutableList.copyOf(faces);
     }
