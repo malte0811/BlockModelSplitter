@@ -34,6 +34,19 @@ public record Vec3d(double x, double y, double z) {
         };
     }
 
+    public Vec3d normalize() {
+        var length = length();
+        if (length < 1e-4) {
+            return this;
+        } else {
+            return scale(1 / length);
+        }
+    }
+
+    public double length() {
+        return Math.sqrt(lengthSquared());
+    }
+
     public double lengthSquared() {
         double ret = 0;
         for (int i = 0; i < 3; ++i) {

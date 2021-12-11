@@ -8,12 +8,14 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import malte0811.modelsplitter.math.EpsilonMath;
 import malte0811.modelsplitter.math.Plane;
 import malte0811.modelsplitter.math.Vec3d;
+import malte0811.modelsplitter.model.MaterialLibrary.OBJMaterial;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nullable;
 import java.io.*;
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -33,6 +35,10 @@ public class OBJModel<Texture> {
         this.allFaces = faceListBuilder.build();
     }
 
+    public OBJModel(List<Polygon<Texture>> allFaces) {
+        this(Map.of("", new Group<>(allFaces)));
+    }
+
     private OBJModel(Stream<Map.Entry<String, List<Polygon<Texture>>>> faces) {
         this(
                 faces.map(e -> Pair.of(e.getKey(), new Group<>(e.getValue())))
@@ -40,54 +46,73 @@ public class OBJModel<Texture> {
         );
     }
 
-    public static OBJModel<Void> readFromStream(InputStream source) {
+    public static OBJModel<OBJMaterial> readFromStream(InputStream source, Function<String, InputStream> getMTLInput) {
         List<Vec3d> points = new ArrayList<>();
         List<Vec3d> normals = new ArrayList<>();
         List<UVCoords> uvs = new ArrayList<>();
-        Map<String, List<Polygon<Void>>> groups = new HashMap<>();
+        Map<String, List<Polygon<OBJMaterial>>> groups = new HashMap<>();
         MutableObject<String> currentGroup = new MutableObject<>(DEFAULT_GROUP);
-        new BufferedReader(new InputStreamReader(source))
-                .lines()
-                .filter(l -> l.charAt(0) != '#')
-                .forEach(line -> {
-                    StringTokenizer tokenizer = new StringTokenizer(line);
-                    if (!tokenizer.hasMoreTokens())
-                        return;
-                    String type = tokenizer.nextToken();
-                    switch (type) {
-                        case "v" -> points.add(new Vec3d(readTokens(tokenizer, 3)));
-                        case "vn" -> normals.add(new Vec3d(readTokens(tokenizer, 3)));
-                        case "vt" -> uvs.add(new UVCoords(readTokens(tokenizer, 2)));
-                        case "f" -> {
-                            List<Vertex> vertices = new ArrayList<>();
-                            while (tokenizer.hasMoreTokens()) {
-                                final String vertex = tokenizer.nextToken();
-                                String[] parts = vertex.split("/");
-                                int posId = Integer.parseInt(parts[0]) - 1;
-                                final UVCoords uv;
-                                if (!parts[1].isEmpty()) {
-                                    int vt = Integer.parseInt(parts[1]) - 1;
-                                    uv = uvs.get(vt);
-                                } else {
-                                    uv = UVCoords.ZERO;
-                                }
-                                Vec3d normal;
-                                if (parts.length > 2) {
-                                    int vn = Integer.parseInt(parts[2]) - 1;
-                                    normal = normals.get(vn);
-                                } else {
-                                    normal = new Vec3d(0, 1, 0);
-                                }
-                                vertices.add(new Vertex(points.get(posId), normal, uv));
-                            }
-                            groups.computeIfAbsent(currentGroup.getValue(), s -> new ArrayList<>())
-                                    .add(new Polygon<>(vertices, null));
+        MutableObject<MaterialLibrary> currentMTL = new MutableObject<>(null);
+        MutableObject<OBJMaterial> currentMat = new MutableObject<>(null);
+        getRelevantLines(source).forEach(p -> {
+            StringTokenizer tokenizer = p.getValue();
+            switch (p.getKey()) {
+                case "mtllib" -> {
+                    var mtlInput = getMTLInput.apply(tokenizer.nextToken());
+                    var mtl = MaterialLibrary.parse(getRelevantLines(mtlInput));
+                    currentMTL.setValue(mtl);
+                }
+                case "v" -> points.add(new Vec3d(readTokens(tokenizer, 3)));
+                case "vn" -> normals.add(new Vec3d(readTokens(tokenizer, 3)));
+                case "vt" -> uvs.add(new UVCoords(readTokens(tokenizer, 2)));
+                case "f" -> {
+                    List<Vertex> vertices = new ArrayList<>();
+                    while (tokenizer.hasMoreTokens()) {
+                        final String vertex = tokenizer.nextToken();
+                        String[] parts = vertex.split("/");
+                        int posId = Integer.parseInt(parts[0]) - 1;
+                        final UVCoords uv;
+                        if (!parts[1].isEmpty()) {
+                            int vt = Integer.parseInt(parts[1]) - 1;
+                            uv = uvs.get(vt);
+                        } else {
+                            uv = UVCoords.ZERO;
                         }
-                        case "o" -> currentGroup.setValue(tokenizer.nextToken());
-                        default -> System.out.println("Ignoring line " + line);
+                        Vec3d normal;
+                        if (parts.length > 2) {
+                            int vn = Integer.parseInt(parts[2]) - 1;
+                            normal = normals.get(vn);
+                        } else {
+                            normal = new Vec3d(0, 1, 0);
+                        }
+                        vertices.add(new Vertex(points.get(posId), normal, uv));
                     }
-                });
+                    groups.computeIfAbsent(currentGroup.getValue(), s -> new ArrayList<>())
+                            .add(new Polygon<>(vertices, currentMat.getValue()));
+                }
+                case "o" -> currentGroup.setValue(tokenizer.nextToken());
+                case "s" -> {
+                } // NOP, Forge parses this and then ignores it
+                case "usemtl" -> {
+                    var materialMap = currentMTL.getValue().materials();
+                    var materialName = tokenizer.nextToken();
+                    var newMaterial = materialMap.get(materialName);
+                    currentMat.setValue(Objects.requireNonNull(newMaterial, "No material " + materialName));
+                }
+                default -> System.out.println("Ignoring line with token " + p.getKey());
+            }
+        });
         return new OBJModel<>(groups.entrySet().stream());
+    }
+
+    private static Stream<Pair<String, StringTokenizer>> getRelevantLines(InputStream in) {
+        return new BufferedReader(new InputStreamReader(in))
+                .lines()
+                .filter(l -> !l.trim().isEmpty() && l.charAt(0) != '#')
+                .map(s -> {
+                    StringTokenizer tokenizer = new StringTokenizer(s);
+                    return Pair.of(tokenizer.nextToken(), tokenizer);
+                });
     }
 
     public static <Texture> OBJModel<Texture> union(@Nullable OBJModel<Texture> a, @Nullable OBJModel<Texture> b) {
