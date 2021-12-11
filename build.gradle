@@ -1,6 +1,5 @@
 plugins {
     id 'java'
-    id 'maven'
     id 'application'
 }
 
@@ -12,10 +11,10 @@ repositories {
 }
 
 dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.12'
-    implementation("com.google.guava:guava:29.0-jre")
-    compile group: 'it.unimi.dsi', name: 'fastutil', version: '8.1.0'
-    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
+    testImplementation group: 'junit', name: 'junit', version: '4.12'
+    implementation group: 'com.google.guava', name: 'guava', version: '31.0.1-jre'
+    implementation group: 'it.unimi.dsi', name: 'fastutil', version: '8.5.6'
+    implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
 }
 
 jar {
@@ -35,43 +34,50 @@ artifacts {
     archives sourcesJar
 }
 
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            repository(url: "file://" + (System.getenv("local_maven") != null ? System.getenv("local_maven") : System.getenv("bamboo_local_maven")))
-            pom {
-                groupId = project.group
-                version = project.version
-                artifactId = project.archivesBaseName
-                project {
-                    name project.archivesBaseName
-                    packaging 'jar'
-                    description project.archivesBaseName
-                    url ''
-                    scm {
-                        url 'https://github.com/malte0811/BlockModelSplitter'
-                        connection 'scm:git:git@github.com/malte0811/BlockModelSplitter.git'
-                        developerConnection 'scm:git:git@github.com/malte0811/BlockModelSplitter.git'
-                    }
-                    issueManagement {
-                        system 'github'
-                        url 'https://github.com/malte0811/BlockModelSplitter/issues'
-                    }
+apply plugin: 'maven-publish'
 
-                    developers {
-                        developer {
-                            id 'malte0811'
-                            name 'malte0811'
-                            roles { role 'developer' }
-                        }
+publishing {
+    repositories {
+        maven {
+            url = "file://" + (System.getenv("local_maven") != null ? System.getenv("local_maven") : System.getenv("bamboo_local_maven"))
+        }
+    }
+    publications {
+        maven(MavenPublication) {
+            groupId = project.group
+            version = project.version
+            artifactId = project.archivesBaseName
+
+            artifact jar
+            artifact sourcesJar
+
+            pom {
+                name = project.archivesBaseName
+                description = project.archivesBaseName
+                url = ''
+                scm {
+                    url = 'https://github.com/malte0811/BlockModelSplitter'
+                    connection = 'scm:git:git@github.com/malte0811/BlockModelSplitter.git'
+                    developerConnection = 'scm:git:git@github.com/malte0811/BlockModelSplitter.git'
+                }
+                issueManagement {
+                    system = 'github'
+                    url = 'https://github.com/malte0811/BlockModelSplitter/issues'
+                }
+
+                developers {
+                    developer {
+                        id = 'malte0811'
+                        name = 'malte0811'
                     }
                 }
             }
+            /*
             pom.whenConfigured {
                 p -> p.dependencies = []
-            }
+            }*/
         }
     }
 }
 
-uploadArchives.dependsOn build
+publish.dependsOn build
