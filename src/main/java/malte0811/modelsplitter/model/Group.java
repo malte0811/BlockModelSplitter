@@ -68,4 +68,8 @@ public record Group<Texture>(List<Polygon<Texture>> faces) {
     public Group<Texture> quadify() {
         return flatmapFaces(p -> p.quadify().stream());
     }
+
+    public Group<Texture> recomputeZeroNormals() {
+        return mapFaces(Polygon::recomputeZeroNormals);
+    }
 }

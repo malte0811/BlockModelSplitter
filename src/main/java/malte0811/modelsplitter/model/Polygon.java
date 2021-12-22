@@ -132,4 +132,29 @@ public class Polygon<Texture> {
         }
         return quads;
     }
+
+    public Polygon<Texture> recomputeZeroNormals() {
+        Vec3d computedNormal = null;
+        List<Vertex> resultVertices = null;
+        for (int i = 0; i < points.size(); ++i) {
+            var point = points.get(i);
+            if (point.normal().lengthSquared() < 1e-3) {
+                if (resultVertices == null) {
+                    resultVertices = new ArrayList<>(points);
+                    var origin = points.get(0).position();
+                    var diff1 = points.get(1).position().subtract(origin);
+                    var diff2 = points.get(2).position().subtract(origin);
+                    computedNormal = diff1.crossProduct(diff2).normalize();
+                }
+                resultVertices.set(i, new Vertex(point.position(), computedNormal, point.uv()));
+            } else if (resultVertices != null) {
+                resultVertices.set(i, point);
+            }
+        }
+        if (resultVertices == null) {
+            return this;
+        } else {
+            return new Polygon<>(resultVertices, getTexture());
+        }
+    }
 }

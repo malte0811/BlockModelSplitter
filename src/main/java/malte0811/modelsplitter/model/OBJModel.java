@@ -108,9 +108,7 @@ public class OBJModel<Texture> {
             }
             groups.put(parserEntry.getKey(), group);
         }
-        return new OBJModel<>(
-                groups.entrySet().stream()
-        );
+        return new OBJModel<>(groups.entrySet().stream());
     }
 
     private static Stream<Pair<String, StringTokenizer>> getRelevantLines(InputStream in) {
@@ -213,5 +211,9 @@ public class OBJModel<Texture> {
 
     public OBJModel<Texture> quadify() {
         return mapGroups(Group::quadify);
+    }
+
+    public OBJModel<Texture> recomputeZeroNormals() {
+        return mapGroups(Group::recomputeZeroNormals);
     }
 }

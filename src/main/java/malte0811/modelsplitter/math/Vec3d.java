@@ -76,4 +76,12 @@ public record Vec3d(double x, double y, double z) {
                 get(2) - other.get(2)
         );
     }
+
+    public Vec3d crossProduct(Vec3d other) {
+        return new Vec3d(
+                y * other.z - z * other.y,
+                z * other.x - x * other.z,
+                x * other.y - y * other.x
+        );
+    }
 }
