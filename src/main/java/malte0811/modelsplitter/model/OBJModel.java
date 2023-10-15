@@ -20,6 +20,14 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * A generic model implementation which can optionally be split into multiple "groups"/parts. Despite the name this
+ * class is not specific to OBJ models and can be used with lists of faces obtained from arbitrary sources; however
+ * direct conversion to/from OBJ is also supported.
+ *
+ * @param <Texture> an object representing additional face-specific data which will be preserved through the splitting
+ *                  process.
+ */
 public class OBJModel<Texture> {
     public static final String DEFAULT_GROUP = "default";
     private final Map<String, Group<Texture>> faces;
@@ -35,6 +43,9 @@ public class OBJModel<Texture> {
         this.allFaces = faceListBuilder.build();
     }
 
+    /**
+     * Creates a model from the given list of faces
+     */
     public OBJModel(List<Polygon<Texture>> allFaces) {
         this(Map.of("", new Group<>(allFaces)));
     }
@@ -46,6 +57,12 @@ public class OBJModel<Texture> {
         );
     }
 
+    /**
+     * Loads a model from an OBJ-formatted input
+     * @param source a stream of OBJ data
+     * @param getMTLInput Given the name of an MTL library, returns a stream of the corresponding MTL file
+     * @return the parsed model
+     */
     public static OBJModel<OBJMaterial> readFromStream(InputStream source, Function<String, InputStream> getMTLInput) {
         record ParserVertex(int pos, int normal, int uv) {}
         record ParserFace(List<ParserVertex> vertices, OBJMaterial material) {}
@@ -111,16 +128,6 @@ public class OBJModel<Texture> {
         return new OBJModel<>(groups.entrySet().stream());
     }
 
-    private static Stream<Pair<String, StringTokenizer>> getRelevantLines(InputStream in) {
-        return new BufferedReader(new InputStreamReader(in))
-                .lines()
-                .filter(l -> !l.trim().isEmpty() && l.charAt(0) != '#')
-                .map(s -> {
-                    StringTokenizer tokenizer = new StringTokenizer(s);
-                    return Pair.of(tokenizer.nextToken(), tokenizer);
-                });
-    }
-
     public static <Texture> OBJModel<Texture> union(@Nullable OBJModel<Texture> a, @Nullable OBJModel<Texture> b) {
         Stream<Map.Entry<String, Group<Texture>>> unionGroups = Stream.empty();
         if (a != null) {
@@ -136,6 +143,16 @@ public class OBJModel<Texture> {
         )));
     }
 
+    private static Stream<Pair<String, StringTokenizer>> getRelevantLines(InputStream in) {
+        return new BufferedReader(new InputStreamReader(in))
+                .lines()
+                .filter(l -> !l.trim().isEmpty() && l.charAt(0) != '#')
+                .map(s -> {
+                    StringTokenizer tokenizer = new StringTokenizer(s);
+                    return Pair.of(tokenizer.nextToken(), tokenizer);
+                });
+    }
+
     private static double[] readTokens(StringTokenizer tokenizer, int tokens) {
         double[] data = new double[tokens];
         for (int i = 0; i < tokens; ++i) {
@@ -144,6 +161,10 @@ public class OBJModel<Texture> {
         return data;
     }
 
+    /**
+     * Splits/cuts the model along the given plane
+     * @return The parts of the model that lie "below", "on", and "above" the plane
+     */
     public Map<EpsilonMath.Sign, OBJModel<Texture>> split(Plane splitPlane) {
         Map<EpsilonMath.Sign, Map<String, Group<Texture>>> resultFaces = new EnumMap<>(EpsilonMath.Sign.class);
         for (Map.Entry<String, Group<Texture>> group : this.faces.entrySet()) {
@@ -157,6 +178,10 @@ public class OBJModel<Texture> {
                 .collect(Collectors.toMap(Map.Entry::getKey, e -> new OBJModel<>(e.getValue())));
     }
 
+    /**
+     * Exports the model in OBJ format
+     * @param outRaw the stream to write OBJ data to
+     */
     public void write(OutputStream outRaw) {
         PrintStream out = new PrintStream(outRaw);
         Object2IntMap<Vec3d> points = new Object2IntOpenHashMap<>();
@@ -185,6 +210,9 @@ public class OBJModel<Texture> {
         return faces.isEmpty();
     }
 
+    /**
+     * @return all faces of the model
+     */
     public List<Polygon<Texture>> getFaces() {
         return allFaces;
     }
@@ -209,10 +237,19 @@ public class OBJModel<Texture> {
         return mapGroups(g -> g.translate(offset));
     }
 
+    /**
+     * Creates a model equivalent to this one in which all faces have exactly 4 vertices.
+     * @return the new model
+     */
     public OBJModel<Texture> quadify() {
         return mapGroups(Group::quadify);
     }
 
+    /**
+     * Creates a model equivalent to this one except that the normals on all faces with zero normals are set to be
+     * orthogonal to the face.
+     * @return the new model
+     */
     public OBJModel<Texture> recomputeZeroNormals() {
         return mapGroups(Group::recomputeZeroNormals);
     }

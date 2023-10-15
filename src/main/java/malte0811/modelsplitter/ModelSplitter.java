@@ -14,12 +14,17 @@ import malte0811.modelsplitter.model.Vertex;
 
 import java.util.Map;
 
-public class SplitModel<Texture> {
+public class ModelSplitter {
     private static final EpsilonMath EPS_MATH = new EpsilonMath(1e-5);
 
-    private final Map<ModelSplitterVec3i, OBJModel<Texture>> submodels;
-
-    public SplitModel(OBJModel<Texture> input) {
+    /**
+     * Computes the parts of the model contained in each cell (block) of a unit grid. Faces are split when necessary.
+     *
+     * @param input     the model to split up
+     * @param <Texture> As documented on {@link OBJModel}
+     * @return a map mapping a cell/block location to the model contained in it.
+     */
+    public static <Texture> Map<ModelSplitterVec3i, OBJModel<Texture>> splitModel(OBJModel<Texture> input) {
         ImmutableMap.Builder<ModelSplitterVec3i, OBJModel<Texture>> submodels = ImmutableMap.builder();
         for (Int2ObjectMap.Entry<OBJModel<Texture>> xSlice : splitInPlanes(input, 0).int2ObjectEntrySet()) {
             Int2ObjectMap<OBJModel<Texture>> columns = splitInPlanes(xSlice.getValue(), 2);
@@ -33,11 +38,7 @@ public class SplitModel<Texture> {
                 }
             }
         }
-        this.submodels = submodels.build();
-    }
-
-    public Map<ModelSplitterVec3i, OBJModel<Texture>> getParts() {
-        return submodels;
+        return submodels.build();
     }
 
     private static <Texture> Int2ObjectMap<OBJModel<Texture>> splitInPlanes(OBJModel<Texture> input, int axis) {

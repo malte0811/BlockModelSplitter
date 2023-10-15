@@ -11,6 +11,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * A single face of a model, represented as a list of vertex positions.<br>
+ * This is always assumed to be "flat" (coplanar vertices); non-flat faces may result in unexpected results. In
+ * "reasonable" models this is assumption is always fulfilled.
+ *
+ * @param <Texture> See {@link OBJModel}
+ */
 public class Polygon<Texture> {
     private static final EpsilonMath EPS_MATH = new EpsilonMath(1e-5);
     private final List<Vertex> points;
@@ -21,7 +28,7 @@ public class Polygon<Texture> {
         this.texture = texture;
     }
 
-    public Polygon(Vertex first, List<Vertex> inner, Vertex last, Texture texture) {
+    private Polygon(Vertex first, List<Vertex> inner, Vertex last, Texture texture) {
         List<Vertex> points = new ArrayList<>();
         if (!EPS_MATH.areSame(first.position(), inner.get(0).position())) {
             points.add(first);

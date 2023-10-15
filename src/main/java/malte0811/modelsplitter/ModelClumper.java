@@ -10,13 +10,22 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class ClumpedModel<Texture> {
-    private final Map<ModelSplitterVec3i, OBJModel<Texture>> clumpedParts;
-
-    public ClumpedModel(SplitModel<Texture> splitModel, Set<ModelSplitterVec3i> parts) {
+public class ModelClumper {
+    /**
+     * Assigns parts of the model contained in cells/blocks which cannot render them to nearby cells which can render
+     * them.
+     *
+     * @param splitModel the parts of the model by the cell/block position physically containing them
+     * @param parts      the cell/block coordinates which can be used to render parts of the model
+     * @param <Texture>  See {@link OBJModel}
+     * @return the model to render for each of the coordinates passed in "parts"
+     */
+    public static <Texture> Map<ModelSplitterVec3i, OBJModel<Texture>> clumpModel(
+            Map<ModelSplitterVec3i, OBJModel<Texture>> splitModel, Set<ModelSplitterVec3i> parts
+    ) {
         Preconditions.checkArgument(!parts.isEmpty());
         Map<ModelSplitterVec3i, OBJModel<Texture>> clumpedParts = new HashMap<>();
-        for (Map.Entry<ModelSplitterVec3i, OBJModel<Texture>> splitPart : splitModel.getParts().entrySet()) {
+        for (Map.Entry<ModelSplitterVec3i, OBJModel<Texture>> splitPart : splitModel.entrySet()) {
             final ModelSplitterVec3i originalTarget = splitPart.getKey();
             ModelSplitterVec3i target = originalTarget;
             OBJModel<Texture> translatedModel = splitPart.getValue();
@@ -34,10 +43,6 @@ public class ClumpedModel<Texture> {
             }
             clumpedParts.merge(target, translatedModel, OBJModel::union);
         }
-        this.clumpedParts = ImmutableMap.copyOf(clumpedParts);
-    }
-
-    public Map<ModelSplitterVec3i, OBJModel<Texture>> getClumpedParts() {
-        return clumpedParts;
+        return ImmutableMap.copyOf(clumpedParts);
     }
 }

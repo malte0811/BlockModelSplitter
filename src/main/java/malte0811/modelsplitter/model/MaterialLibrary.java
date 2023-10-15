@@ -41,5 +41,5 @@ public record MaterialLibrary(Map<String, OBJMaterial> materials) {
         }
     }
 
-    public static record OBJMaterial(String name, String map_Kd) {}
+    public record OBJMaterial(String name, String map_Kd) { }
 }
